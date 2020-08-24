@@ -1,5 +1,7 @@
 import random
 import string
+
+import tornado
 from PIL import Image
 import os
 import subprocess
@@ -77,6 +79,8 @@ class VideoHandler(RequestHandler):
     def get(self, *args, **kwargs):
         path = os.listdir('./static/video/')  # 传入一个路径，返回一个列表，里面是这个目录下面的所有文件名
         self.render('post_video.html')
+    @tornado.gen.coroutine
+    # @tornado.web.asynchronous
     def post(self):
         upload_path = './static/video'
         file_metas = self.request.files.get('file', [])
@@ -89,6 +93,7 @@ class VideoHandler(RequestHandler):
                 f.write(meta.get('body'))  # 写入内容
         global end
         # end = '上传成功'
+        # time.sleep(30)
 
         if file_name == 'DJI_0547_out.MP4':
             with open('static/files/out.txt', 'r') as f:
