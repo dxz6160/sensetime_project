@@ -3,6 +3,7 @@ import time
 import json
 import random
 import string
+from config import BASE_DIRS
 from tornado.gen import coroutine
 from tornado.web import RequestHandler
 from tornado.concurrent import run_on_executor
@@ -15,14 +16,18 @@ class HomeHandler(RequestHandler):
 class PicHandler(RequestHandler):
     executor = ThreadPoolExecutor(100)
 
+    def get(self):
+        self.render('post_pic', filename = 'None.png', result = '')
+
     @coroutine
     def post(self):
         upload_path = './static/picture'
 
         res = yield self.Time_consuming_operation(upload_path)
 
-        pic_id = res[0]
-        result = res[1]
+        result = res[0]
+        filename = res[1]
+        pic_id = res[2]
 
         result_dic = {
             'Statu_code': 200,
@@ -35,17 +40,22 @@ class PicHandler(RequestHandler):
         result_dic = json.dumps(result_dic, ensure_ascii=False)
 
         self.write(result_dic)
+        self.render('post_pic.html', filename = filename, result = result)
 
     @run_on_executor
     def Time_consuming_operation(self, upload_path):
         meta = self.request.files.get('file', [])[0]
         file_name = meta.get('filename')
-        pic_id = 'pic_' + time.strftime("%Y%m%d", time.localtime()) + ''.join(
-            random.sample(string.ascii_letters + string.digits, 4))
+        pic_id = 'pic_' + time.strftime("%Y%m%d", time.localtime()) + ''.join(random.sample(string.ascii_letters + string.digits, 4))
         file_path = os.path.join(upload_path, file_name)
         with open(file_path, 'wb') as f:
             f.write(meta.get('body'))
-        return pic_id, file_name
+        # return pic_id, file_name
+        cmd = 'cd /home/jcai/sensetime_project/Obj_Classify  && python predict.py /home/jcai/sensetime_project/static/picture/' + file_name
+        val = os.popen(cmd).read()
+        result = val.split('类')[1]
+        return result, file_name, pic_id
+
 
 class VideoHandler(RequestHandler):
     executor = ThreadPoolExecutor(10)
