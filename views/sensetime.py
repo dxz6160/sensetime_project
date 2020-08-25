@@ -3,41 +3,39 @@ import time
 import json
 import random
 import string
-from opencv.opencv import opencv_1, opencv_2
+from config import BASE_DIRS
 from PIL import Image
 from tornado.gen import coroutine
 from tornado.web import RequestHandler
 from tornado.concurrent import run_on_executor
 from concurrent.futures import ThreadPoolExecutor
 
-# method = 'method1'
+method = 'method1'
 
 class HomeHandler(RequestHandler):
     def get(self):
         self.write('home')
 
 class PicHandler(RequestHandler):
-
     executor = ThreadPoolExecutor(100)
 
     def get(self):
-        # global method
+        global method
 
-        # try:
-        #     method = self.request.arguments.get('method', [])[0]
-        #     method = method.decode('UTF-8')
-        # except:
-        #     pass
+        try:
+            method = self.request.arguments.get('method', [])[0]
+            method = method.decode('UTF-8')
+        except:
+            pass
 
         self.render('post_pic.html', filename = 'None.png', result = '')
 
     @coroutine
     def post(self):
-        # global method
-
+        global method
         upload_path = './static/picture'
 
-        res = yield self.Time_consuming_operation(upload_path)
+        res = yield self.Time_consuming_operation(upload_path, method)
 
         result = res[0]
         filename = res[1]
@@ -49,7 +47,7 @@ class PicHandler(RequestHandler):
             'Pic_id': pic_id,
             'Classification': result,
             'Confidence': confidence,
-            'time': time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+            'Time': time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         }
 
         result_dic = json.dumps(result_dic, ensure_ascii=False)
@@ -58,14 +56,14 @@ class PicHandler(RequestHandler):
         self.render('post_pic.html', filename = filename, result = result)
 
     @run_on_executor
-    def Time_consuming_operation(self, upload_path):
+    def Time_consuming_operation(self, upload_path, method):
         meta = self.request.files.get('file', [])[0]
         file_name = meta.get('filename')
         pic_id = 'pic_' + time.strftime("%Y%m%d", time.localtime()) + ''.join(random.sample(string.ascii_letters + string.digits, 4))
         file_path = os.path.join(upload_path, file_name)
         with open(file_path, 'wb') as f:
             f.write(meta.get('body'))
-
+        # return pic_id, file_name
         image_type = file_name.split('.')[-1]
         # 缩略图
         im = Image.open(file_path)  # 打开图片
@@ -76,22 +74,18 @@ class PicHandler(RequestHandler):
             aa = 'png'
         im.save(file_path, aa)
 
-        # if method == 'method1':
-        cmd = 'cd /home/jcai/sensetime_project/Obj_Classify  && python predict.py /home/jcai/sensetime_project/static/picture/' + file_name
-        val = os.popen(cmd).read()
-        result = val.split('类')[1].strip()
-        confidence = ''
-        # elif method == 'method2':
-        #     cmd = 'cd /home/jcai/sensetime_project/libtorch-cpp/build && ./classifier ../abc.pt ../label.txt /home/jcai/sensetime_project/static/picture/' + file_name
-        #     val = os.popen(cmd).read()
-        #     result = val.split(':')[1].split('\n')[0]
-        #     confidence = val.split(':')[2].strip('\n')
-        # else:
-        #     cmd = 'cd /home/jcai/sensetime_project/Obj_Classify  && python predict.py /home/jcai/sensetime_project/static/picture/' + file_name
-        #     val = os.popen(cmd).read()
-        #     result = val.split('类')[1]
-        return result, file_name, pic_id, confidence
-        # return file_path, file_name, pic_id
+        if method == 'method1':
+            cmd = 'cd /home/jcai/sensetime_project/Obj_Classify  && python predict.py /home/jcai/sensetime_project/static/picture/' + file_name
+            val = os.popen(cmd).read()
+            result = val.split('类')[1]
+            confidence = ''
+            return result, file_name, pic_id, confidence
+        elif method == 'method2':
+            cmd = 'cd /home/jcai/sensetime_project/libtorch-cpp/build && ./classifier ../abc.pt ../label.txt /home/jcai/sensetime_project/static/picture/' + file_name
+            val = os.popen(cmd).read()
+            result = val.split(':')[1].split('\n')[0]
+            confidence = val.split(':')[2].strip('\n')
+            return result, file_name, pic_id, confidence
 
 
 class VideoHandler(RequestHandler):
@@ -123,6 +117,4 @@ class VideoHandler(RequestHandler):
         file_path = os.path.join(upload_path, file_name)  # 拼接路径
         with open(file_path, 'wb') as f:
             f.write(meta.get('body'))  # 写入内容
-        opencv_2(file_path)
-
         return video_id, file_name
