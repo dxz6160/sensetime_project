@@ -9,6 +9,7 @@ from tornado.gen import coroutine
 from tornado.web import RequestHandler
 from tornado.concurrent import run_on_executor
 from concurrent.futures import ThreadPoolExecutor
+from opencv.opencv import opencv_1, opencv_2, content
 
 method = 'method1'
 
@@ -59,6 +60,8 @@ class PicHandler(RequestHandler):
     def Time_consuming_operation(self, upload_path, method):
         meta = self.request.files.get('file', [])[0]
         file_name = meta.get('filename')
+        if file_name.split('.')[1] != ('jpg' or 'png'):
+            self.send_error(415, '格式错误')
         pic_id = 'pic_' + time.strftime("%Y%m%d", time.localtime()) + ''.join(random.sample(string.ascii_letters + string.digits, 4))
         file_path = os.path.join(upload_path, file_name)
         with open(file_path, 'wb') as f:
@@ -77,7 +80,7 @@ class PicHandler(RequestHandler):
         if method == 'method1':
             cmd = 'cd /home/jcai/sensetime_project/Obj_Classify  && python predict.py /home/jcai/sensetime_project/static/picture/' + file_name
             val = os.popen(cmd).read()
-            result = val.split('类')[1]
+            result = val.split('类')[1].strip('\n')
             confidence = ''
             return result, file_name, pic_id, confidence
         elif method == 'method2':
@@ -94,10 +97,10 @@ class VideoHandler(RequestHandler):
     @coroutine
     def post(self):
         upload_path = './static/video'
-        video = yield self.post_video(upload_path)
+        res = yield self.post_video(upload_path)
 
-        video_id  = video[0]
-        result = video[1]
+        video_id  = res[0]
+        result = res[1]
 
 
         result_dic = {
@@ -116,5 +119,11 @@ class VideoHandler(RequestHandler):
         video_id = 'pic_' + time.strftime("%Y%m%d", time.localtime()) + ''.join(random.sample(string.ascii_letters + string.digits, 4))
         file_path = os.path.join(upload_path, file_name)  # 拼接路径
         with open(file_path, 'wb') as f:
-            f.write(meta.get('body'))  # 写入内容
-        return video_id, file_name
+            f.write(meta.get('body'))
+        path = opencv_2(file_name)
+        cmd = 'cd /media/jcai/53EAA7DFB7C920B3/Object-Detection-Pytorch-FasterRCNN && python predict.py /home/jcai/sensetime_project/static/out_picture/' + file_name.split('.')[0] + '/'
+        val = os.popen(cmd).read()
+        result = content(val)
+
+        return video_id, result
+
