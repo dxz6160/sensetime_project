@@ -50,7 +50,6 @@ def opencv_2(filename):
             cv2.imwrite(outPutDirName + str(times) + '.png', image)
     print('图片提取结束')
     camera.release()
-    return outPutDirName
 
 
 def content(content):

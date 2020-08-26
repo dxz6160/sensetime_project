@@ -120,7 +120,7 @@ class VideoHandler(RequestHandler):
         file_path = os.path.join(upload_path, file_name)  # 拼接路径
         with open(file_path, 'wb') as f:
             f.write(meta.get('body'))
-        path = opencv_2(file_name)
+        opencv_2(file_name)
         cmd = 'cd /media/jcai/53EAA7DFB7C920B3/Object-Detection-Pytorch-FasterRCNN && python predict.py /home/jcai/sensetime_project/static/out_picture/' + file_name.split('.')[0] + '/'
         val = os.popen(cmd).read()
         result = content(val)
