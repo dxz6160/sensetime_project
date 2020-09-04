@@ -9,6 +9,7 @@ class Application(tornado.web.Application):
             (r'/home', sensetime.HomeHandler),
             (r'/post_pic', sensetime.PicHandler),
             (r'/post_video', sensetime.VideoHandler),
+            (r'/play_video', sensetime.PVideoHandler),
             (r'/(.*)$', tornado.web.StaticFileHandler,{"path": os.path.join(config.BASE_DIRS, "static/html"), "default_filename": "index.html"})
         ]
 

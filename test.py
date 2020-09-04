@@ -1,32 +1,32 @@
-with open('static/files/out.txt', 'r') as f:
-    content = f.read()
-
-# content = content.strip().replace('\n', '')
-content = content.replace('\n','').replace(' ','').replace(",device='cuda:0'", '')
-content = content.replace("'boxes'",'')
-content = content.replace("'labels'",'')
-content = content.replace("'scores'",'')
-content = content.replace(":tensor",'')
-
-content1 = content.split('}')
-
-dic = {}
-
-for content2 in content1[:-1]:
-    id = content2.split('{')[0]
-    content3 = content2.split('{')[1].strip('(').split(')')
-    boxes = content3[0].strip('[').strip(']').split('],[')
-    lables = content3[1].strip(',(').strip('[').strip(']').split(',')
-    scores = content3[2].strip(',(').strip('[').strip(']').split(',')
-    result = zip(boxes, lables, scores)
-    dic[int(id)] = list(result)
-
-final = sorted(dic.items(), key=lambda obj: obj[0])
-
-for i in final:
-    print(i[0])
-    for j in i[1]:
-        print(j)
+# with open('static/files/out.txt', 'r') as f:
+#     content = f.read()
+#
+# # content = content.strip().replace('\n', '')
+# content = content.replace('\n','').replace(' ','').replace(",device='cuda:0'", '')
+# content = content.replace("'boxes'",'')
+# content = content.replace("'labels'",'')
+# content = content.replace("'scores'",'')
+# content = content.replace(":tensor",'')
+#
+# content1 = content.split('}')
+#
+# dic = {}
+#
+# for content2 in content1[:-1]:
+#     id = content2.split('{')[0]
+#     content3 = content2.split('{')[1].strip('(').split(')')
+#     boxes = content3[0].strip('[').strip(']').split('],[')
+#     lables = content3[1].strip(',(').strip('[').strip(']').split(',')
+#     scores = content3[2].strip(',(').strip('[').strip(']').split(',')
+#     result = zip(boxes, lables, scores)
+#     dic[int(id)] = list(result)
+#
+# final = sorted(dic.items(), key=lambda obj: obj[0])
+#
+# for i in final:
+#     print(i[0])
+#     for j in i[1]:
+#         print(j)
 
 #     content2 = content1.split('{')[1]
 #     content2 = content2.split(':')
@@ -44,3 +44,10 @@ for i in final:
 
 # print(content)
 # print(result)
+
+# for i  in range(5):
+#     print(i)
+import os
+
+for filename in os.listdir(r'C:\Users\61609\PycharmProjects\sensetime_project\static\out_picture\DJI_0547_out'):
+    print(filename)
