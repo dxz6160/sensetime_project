@@ -125,7 +125,8 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-static/picture
-static/tag_video
-static/video
+static
+
+dealwithvideo
+
 
